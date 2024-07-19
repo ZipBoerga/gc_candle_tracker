@@ -1,0 +1,6 @@
+.idea/
+.venv/
+airflow/logs/
+airflow/plugins/
+airflow/config/
+**/__pycache__/

@@ -19,13 +19,13 @@ x-airflow-common:
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
-    postgres:
+    airflow_postgres:
       condition: service_healthy
 
 services:
   # airflow
-  postgres:
-    container_name: postgres
+  airflow_postgres:
+    container_name: airflow_postgres
     image: postgres:13
     profiles:
       - airflow
@@ -34,8 +34,7 @@ services:
       POSTGRES_PASSWORD: airflow
       POSTGRES_DB: airflow
     volumes:
-      - ./postgres_init:/docker-entrypoint-initdb.d
-      - postgres-db-volume:/var/lib/postgresql/data
+      - postgres-airflow-volume::/var/lib/postgresql/data
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "airflow"]
       interval: 10s
@@ -231,6 +230,24 @@ services:
       timeout: 10s
       retries: 5
 
+  # analytical db
+  postgres:
+    container_name: postgres
+    image: postgres:13
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: candles
+    volumes:
+      - ./postgres_init:/docker-entrypoint-initdb.d
+      - postgres-analytical-volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "airflow"]
+      interval: 10s
+      retries: 5
+      start_period: 5s
+    restart: always
 
 volumes:
-  postgres-db-volume:
+  postgres-airflow-volume:
+  postgres-analytical-volume:

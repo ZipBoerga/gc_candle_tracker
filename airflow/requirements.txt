@@ -1,1 +1,4 @@
 kafka-python-ng
+psycopg2-binary
+beautifulsoup4
+requests

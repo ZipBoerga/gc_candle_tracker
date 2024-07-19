@@ -1,15 +1,17 @@
 from datetime import datetime
+from typing import Optional
 
 import psycopg2
 from airflow.decorators import dag, task
 
-import scrapping as scrap
+import utils.scrapping as scrap
+import utils.queries as queries
 
 
 @dag(schedule='0 13 * * *', start_date=datetime(2023, 7, 19), catchup=True)
-def load_candles_data() -> list[str]:
+def load_candles_data():
     @task()
-    def get_urls():
+    def get_urls() -> list[str]:
         urls = scrap.get_candle_urls()
         return urls
 
@@ -20,6 +22,7 @@ def load_candles_data() -> list[str]:
             candles.append(scrap.get_candle_details(url))
         return candles
 
+    # TODO avoiding unique_key violation
     @task
     def write_to_db(candles: list[dict]) -> None:
         conn = psycopg2.connect(
@@ -33,15 +36,10 @@ def load_candles_data() -> list[str]:
         )
         cursor = conn.cursor()
 
-        query = '''
-            INSERT INTO candle_updates (id, candle_id, url, name, picture_url, ingredients, price)
-            VALUES (%s, %s, %s, %s, %s, %s);
-        '''
-
         for candle in candles:
-            id_ = f"{candle['candle_id']}_{candle['processing_timestamp']}"
+            id_ = f"{candle['candle_id']}_{candle['processing_date']}"
             cursor.execute(
-                query,
+                queries.history_query,
                 (
                     id_,
                     candle['candle_id'],
@@ -52,7 +50,19 @@ def load_candles_data() -> list[str]:
                     candle['price'],
                 ),
             )
-        conn.commit()
+            conn.commit()
+
+            cursor.execute(queries.curr_price_select_query, (candle['candle_id'],))
+            price = cursor.fetchall()
+
+            if price is None:
+                price_query = queries.curr_price_insert_query
+            else:
+                price_query = queries.curr_price_update_query
+
+            cursor.execute(price_query, (candle['candle_id'], candle['price']))
+            conn.commit()
+
 
     get_urls_task = get_urls()
     get_candles_data_task = get_candles_data(get_urls_task)

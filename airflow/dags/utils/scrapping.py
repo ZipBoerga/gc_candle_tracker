@@ -1,6 +1,6 @@
 import re
 from typing import Optional
-import time
+from datetime import datetime
 
 import requests
 from bs4 import BeautifulSoup
@@ -55,7 +55,7 @@ def get_candle_details(url: str) -> Optional[dict]:
             'picture_url': pic_url,
             'ingredients': ingredients,
             'price': price,
-            'processing_timestamp': int(time.time()),
+            'processing_date': datetime.now().strftime('%d-%m-%Y')
         }
     except Exception as e:
         print(f'Error processing candle {url}: {e}')

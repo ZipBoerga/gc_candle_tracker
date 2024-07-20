@@ -30,12 +30,11 @@ def load_candles_data():
     def write_to_db(candles: list[dict]) -> None:
         pg_hook = PostgresHook(
             postgres_conn_id='postgres_db'
-            # schema?
         )
         conn = pg_hook.get_conn()
         cursor = conn.cursor()
 
-        for i, candle in enumerate(candles):
+        for candle in candles:
             id_ = f"{candle['candle_id']}_{candle['processing_date']}"
             cursor.execute(
                 queries.history_query,
@@ -49,21 +48,13 @@ def load_candles_data():
                     candle['price'],
                 ),
             )
-            conn.commit()
-
             cursor.execute(queries.curr_price_select_query, (candle['candle_id'],))
             price = cursor.fetchall()
-
-            if price is None:
-                price_query = queries.curr_price_insert_query
+            if len(price) == 0:
+                cursor.execute(queries.curr_price_insert_query, (candle['candle_id'], candle['price']))
             else:
-                price_query = queries.curr_price_update_query
-
-            cursor.execute(price_query, (candle['candle_id'], candle['price']))
+                cursor.execute(queries.curr_price_update_query, (candle['price'], candle['candle_id']))
             conn.commit()
-
-            if (i + 1) == 0 and i != 0:
-                print(f'Wrote {i + 1} candles to db from {len(candle)}')
 
     get_urls_task = get_urls()
     get_candles_data_task = get_candles_data(get_urls_task)

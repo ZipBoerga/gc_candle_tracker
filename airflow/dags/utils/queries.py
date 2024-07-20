@@ -1,12 +1,12 @@
 history_query = '''
     INSERT INTO price_history (id, candle_id, url, name, picture_url, ingredients, price)
-    VALUES (%s, %s, %s, %s, %s, %s);
+    VALUES (%s, %s, %s, %s, %s, %s, %s);
 '''
 
 curr_price_update_query = '''
-    UPDATE current_prices 
-    SET price = %
-    WHERE candle_id = %;
+    UPDATE current_prices
+    SET price = %s
+    WHERE candle_id = %s;
 '''
 
 curr_price_insert_query = '''
@@ -14,5 +14,6 @@ curr_price_insert_query = '''
 '''
 
 curr_price_select_query = '''
-    SELECT candle, price FROM current_prices WHERE candle_id = %s;
+    SELECT candle_id, price FROM current_prices 
+    WHERE candle_id = %s;
 '''

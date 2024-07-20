@@ -2,5 +2,5 @@
 .venv/
 airflow/logs/
 airflow/plugins/
-airflow/config/
 **/__pycache__/
+config/connections.json

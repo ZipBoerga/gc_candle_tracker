@@ -12,3 +12,5 @@ CREATE TABLE IF NOT EXISTS current_prices (
     candle_id VARCHAR(100) PRIMARY KEY,
     price REAL NOT NULL
 );
+
+ALTER TABLE current_prices REPLICA IDENTITY FULL;

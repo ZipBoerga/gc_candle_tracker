@@ -3,6 +3,7 @@ from typing import Optional
 
 import psycopg2
 from airflow.decorators import dag, task
+from airflow.providers.postgres.hooks.postgres import PostgresHook
 
 import utils.scrapping as scrap
 import utils.queries as queries
@@ -25,15 +26,11 @@ def load_candles_data():
     # TODO avoiding unique_key violation
     @task
     def write_to_db(candles: list[dict]) -> None:
-        conn = psycopg2.connect(
-            {
-                'dbname': 'candles',
-                'user': 'admin',
-                'password': 'admin',
-                'host': 'postgres',
-                'port': '5432',
-            }
+        pg_hook = PostgresHook(
+            postgres_conn_id='postgres_db'
+            # schema?
         )
+        conn = pg_hook.get_conn()
         cursor = conn.cursor()
 
         for candle in candles:
@@ -62,7 +59,6 @@ def load_candles_data():
 
             cursor.execute(price_query, (candle['candle_id'], candle['price']))
             conn.commit()
-
 
     get_urls_task = get_urls()
     get_candles_data_task = get_candles_data(get_urls_task)

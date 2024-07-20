@@ -55,7 +55,7 @@ def get_candle_details(url: str) -> Optional[dict]:
             'picture_url': pic_url,
             'ingredients': ingredients,
             'price': price,
-            'processing_date': datetime.now().strftime('%d-%m-%Y')
+            'processing_date': int(datetime.now().timestamp())
         }
     except Exception as e:
         print(f'Error processing candle {url}: {e}')

@@ -5,12 +5,30 @@ CREATE TABLE IF NOT EXISTS price_history (
     name VARCHAR(255) NOT NULL,
     picture_url VARCHAR(255),
     ingredients VARCHAR[],
-    price REAL NOT NULL
+    price REAL NOT NULL,
+    entry_date DATE DEFAULT CURRENT_DATE
 );
+
+
 
 CREATE TABLE IF NOT EXISTS current_prices (
     candle_id VARCHAR(100) PRIMARY KEY,
-    price REAL NOT NULL
+    price REAL NOT NULL,
+    date_updated DATE DEFAULT CURRENT_DATE
 );
 
 ALTER TABLE current_prices REPLICA IDENTITY FULL;
+
+CREATE OR REPLACE FUNCTION update_date()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.date_updated = CURRENT_DATE;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_date_trigger
+BEFORE UPDATE ON current_prices
+FOR EACH ROW
+EXECUTE FUNCTION update_date();
+

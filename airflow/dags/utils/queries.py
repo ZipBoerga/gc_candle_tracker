@@ -1,4 +1,12 @@
-history_query = '''
+latest_candle_entry_query = '''
+    SELECT entry_date
+    FROM price_history
+    WHERE candle_id = %s
+    ORDER BY entry_date DESC
+    LIMIT 1
+'''
+
+history_insert_query = '''
     INSERT INTO price_history (id, candle_id, url, name, picture_url, ingredients, price)
     VALUES (%s, %s, %s, %s, %s, %s, %s);
 '''

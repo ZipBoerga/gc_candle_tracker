@@ -1,7 +1,5 @@
-from datetime import datetime
-from typing import Optional
+from datetime import datetime, timedelta
 
-import psycopg2
 from airflow.decorators import dag, task
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 
@@ -11,12 +9,18 @@ import utils.queries as queries
 
 @dag(schedule='0 13 * * *', start_date=datetime(2023, 7, 19), catchup=False)
 def load_candles_data():
-    @task()
+    @task(
+        retries=3,
+        retry_delay=timedelta(hours=1)
+    )
     def get_urls() -> list[str]:
         urls = scrap.get_candle_urls()
         return urls
 
-    @task()
+    @task(
+        retries=3,
+        retry_delay=timedelta(hours=1)
+    )
     def get_candles_data(urls: list[str]) -> list[dict]:
         candles: list[dict] = []
         for i, url in enumerate(urls):
@@ -25,7 +29,7 @@ def load_candles_data():
             candles.append(scrap.get_candle_details(url))
         return candles
 
-    # TODO avoiding unique_key violation
+    # what are the chances that I will not write the full batch?
     @task
     def write_to_db(candles: list[dict]) -> None:
         pg_hook = PostgresHook(
@@ -35,9 +39,15 @@ def load_candles_data():
         cursor = conn.cursor()
 
         for candle in candles:
+            cursor.execute(queries.latest_candle_entry_query, (candle['candle_id'],))
+            previous_entry_date_row = cursor.fetchone()
+
+            if previous_entry_date_row is not None and previous_entry_date_row[0] == datetime.now().date():
+                continue
+
             id_ = f"{candle['candle_id']}_{candle['processing_date']}"
             cursor.execute(
-                queries.history_query,
+                queries.history_insert_query,
                 (
                     id_,
                     candle['candle_id'],

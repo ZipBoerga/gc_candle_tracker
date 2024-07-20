@@ -1,11 +1,12 @@
-[
-  {
+{
+  "postgres_db": {
     "conn_id": "postgres_db",
     "conn_type": "postgres",
     "host": "postgres",
     "schema": "candles",
     "login": "admin",
     "password": "admin",
-    "port": 5432
+    "port": 5432,
+    "extra": null
   }
-]
+}

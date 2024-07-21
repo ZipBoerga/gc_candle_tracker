@@ -2,7 +2,7 @@ import logging
 from datetime import datetime
 
 from airflow.decorators import dag, task
-
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 
 logging.basicConfig(level=logging.INFO,  # Set the logging level
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -20,6 +20,15 @@ def process_data_change():
     def process_message(**kwargs):
         message = kwargs['dag_run'].conf['message']
         logger.info(message)
+
+    t2 = TriggerDagRunOperator(
+        task_id='trigger_test_dag',
+        trigger_dag_id='test_dag',
+    )
+
+    process_message_dag = process_message()
+
+    process_message_dag >> t2
 
 
 process_data_change_dag = process_data_change()

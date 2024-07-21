@@ -17,12 +17,8 @@ from airflow_provider_kafka.operators.event_triggers_function import EventTrigge
 # the other dag runs are all parts of THIS dag run. Not clean!
 # Suggestion: CDC in Spark, Spark calls airflow in the to send a message in a telegram or sends message itself.
 # option 2: check if this propagates to the dag triggered by this triggered dag
+# checked. It is bad. Will use a container with a consumer to replace it.
 def catch_data_changes():
-    def await_function(message):
-        val = json.loads(message.value())
-        print(f'The message value is: {val}')
-        return val
-
     def trigger_change_processing_dag(message, **context):
         if message:
             trigger = TriggerDagRunOperator(
@@ -35,7 +31,7 @@ def catch_data_changes():
     read_from_kafka = EventTriggersFunctionOperator(
         task_id='consume_price_changes',
         topics=['candles.public.current_prices'],
-        apply_function='catch_data_changes_dag.await_function',
+        apply_function='utils.await_function.await_function',
         kafka_config={
             'bootstrap.servers': 'broker:29092',
             'group.id': 'price_cdc',

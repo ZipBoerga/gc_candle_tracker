@@ -7,7 +7,13 @@ import utils.scrapping as scrap
 import utils.queries as queries
 
 
-@dag(schedule='0 13 * * *', start_date=datetime(2023, 7, 19), catchup=False)
+@dag(
+    dag_id='load_candles_data',
+    schedule='0 13 * * *',
+    start_date=datetime(2023, 7, 19),
+    is_paused_upon_creation=False,
+    catchup=False
+)
 def load_candles_data():
     @task(
         retries=3,
@@ -39,11 +45,11 @@ def load_candles_data():
         cursor = conn.cursor()
 
         for candle in candles:
-            cursor.execute(queries.latest_candle_entry_query, (candle['candle_id'],))
-            previous_entry_date_row = cursor.fetchone()
+            # cursor.execute(queries.latest_candle_entry_query, (candle['candle_id'],))
+            # previous_entry_date_row = cursor.fetchone()
 
-            if previous_entry_date_row is not None and previous_entry_date_row[0] == datetime.now().date():
-                continue
+            # if previous_entry_date_row is not None and previous_entry_date_row[0] == datetime.now().date():
+            #     continue
 
             id_ = f"{candle['candle_id']}_{candle['processing_date']}"
             cursor.execute(

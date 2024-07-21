@@ -82,6 +82,18 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
+  airflow-triggerer:
+    <<: *airflow-common
+    container_name: airflow-triggerer
+    command: triggerer
+    restart: always
+    profiles:
+      - airflow
+    depends_on:
+      <<: *airflow-common-depends-on
+      airflow-init:
+        condition: service_completed_successfully
+
   airflow-init:
     <<: *airflow-common
     container_name: airflow-init
@@ -94,7 +106,7 @@ services:
         airflow db upgrade
         airflow connections import ./config/connections.json
         exec /entrypoint airflow version
-#        airflow variables import /opt/airflow/config/variables.json
+    #        airflow variables import /opt/airflow/config/variables.json
     environment:
       <<: *airflow-common-env
       _AIRFLOW_DB_MIGRATE: 'true'
@@ -148,7 +160,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_JMX_PORT: 9101
       KAFKA_JMX_HOSTNAME: localhost
-#      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      #      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry:8081
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker:29092
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
       CONFLUENT_METRICS_ENABLE: 'false'
@@ -174,7 +186,7 @@ services:
       - "9021:9021"
     environment:
       CONTROL_CENTER_BOOTSTRAP_SERVERS: 'broker:29092'
-#      CONTROL_CENTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      #      CONTROL_CENTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
       CONTROL_CENTER_REPLICATION_FACTOR: 1
       CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
       CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
@@ -215,6 +227,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    profiles:
+      - debezium
     volumes:
       - debezium-volume:/kafka/connect
 
@@ -223,6 +237,8 @@ services:
       context: ./debezium/
       dockerfile: Dockerfile
     container_name: debezium-init
+    profiles:
+      - debezium
     depends_on:
       debezium:
         condition: service_healthy

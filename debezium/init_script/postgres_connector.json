@@ -14,7 +14,7 @@
     "transforms": "route",
     "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
     "transforms.route.regex": "(.+)",
-    "transforms.route.replacement": "candles_$1",
+    "transforms.route.replacement": "$1",
     "topic.prefix": "candles"
   }
 }

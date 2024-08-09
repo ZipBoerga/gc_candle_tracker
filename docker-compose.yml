@@ -264,7 +264,34 @@ services:
       start_period: 5s
     restart: always
 
+
+  # spark
+  spark:
+    image: bitnami/spark:3.4.0
+    container_name: spark
+    hostname: spark
+    profiles:
+      - spark
+    environment:
+      SPARK_MODE: master
+      SPARK_RPC_AUTHENTICATION_ENABLED: no
+      SPARK_RPC_ENCRYPTION_ENABLED: no
+      SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED: no
+      SPARK_SSL_ENABLED: no
+      SPARK_USER: spark
+      SPARK_WORKER_INSTANCES: 1
+      SPARK_WORKER_CORES: 6
+      SPARK_WORKER_MEMORY: 2g
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    volumes:
+      - ./spark:/opt/bitnami/spark/spark-apps
+      - spark_kafka_checkpoints:/opt/bitnami/spark/checkpoints
+
+
 volumes:
   postgres-airflow-volume:
   postgres-analytical-volume:
   debezium-volume:
+  spark_kafka_checkpoints:

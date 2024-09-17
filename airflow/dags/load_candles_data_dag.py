@@ -2,6 +2,8 @@ from datetime import datetime, timedelta
 
 from airflow.decorators import dag, task
 from airflow.providers.postgres.hooks.postgres import PostgresHook
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+from airflow.utils.helpers import chain
 
 import utils.scrapping as scrap
 import utils.queries as queries
@@ -11,7 +13,7 @@ import utils.queries as queries
     dag_id='load_candles_data',
     schedule='0 13 * * *',
     start_date=datetime(2023, 7, 19),
-    is_paused_upon_creation=False,
+    is_paused_upon_creation=True,
     catchup=False
 )
 def load_candles_data():
@@ -75,8 +77,14 @@ def load_candles_data():
     get_urls_task = get_urls()
     get_candles_data_task = get_candles_data(get_urls_task)
     write_to_db_task = write_to_db(get_candles_data_task)
+    trigger_processing = TriggerDagRunOperator(
+        task_id='trigger_data_processing',
+        trigger_dag_id='process_data_changes'
+    )
 
-    get_urls_task >> get_candles_data_task >> write_to_db_task
+    chain(get_urls_task, get_candles_data_task, write_to_db_task, trigger_processing)
+    # chain(trigger_processing)
+    # get_urls_task >> get_candles_data_task >> write_to_db_task
 
 
 load_candles_data_dag = load_candles_data()

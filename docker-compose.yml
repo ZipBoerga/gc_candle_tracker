@@ -103,7 +103,10 @@ services:
     command:
       - -c
       - |
-        airflow db upgrade
+        mkdir -p /opt/airflow/logs
+        chown -R airflow:airflow /opt/airflow/logs
+        chmod -R 775 /opt/airflow/logs
+        airflow db migrate
         airflow connections import ./config/connections.json
         exec /entrypoint airflow version
     #        airflow variables import /opt/airflow/config/variables.json
@@ -258,7 +261,7 @@ services:
       - "5432:5432"
     command: [ 'postgres', '-c', 'wal_level=logical' ]
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "airflow" ]
+      test: [ "CMD", "pg_isready", "-U", "admin" ]
       interval: 10s
       retries: 5
       start_period: 5s

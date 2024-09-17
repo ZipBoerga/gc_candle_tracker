@@ -11,3 +11,9 @@ spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.0 --repos
 ```
 
 psql -U admin -d tracker_db -c "\copy (SELECT id, candle_id, url, name, picture_url, array_to_string(ingredients, ', ') AS ingredients, price FROM candles.price_history LIMIT 10) TO 'candles1.csv' CSV HEADER DELIMITER ';'"
+
+    old_prices_url = 'https://raw.githubusercontent.com/ZipBoerga/gc_candle_tracker/main/testing/candles_initial.csv'
+    new_prices_url = 'https://raw.githubusercontent.com/ZipBoerga/gc_candle_tracker/testing_updates_sorting/testing/candles_modified.csv'
+
+
+airflow dags trigger 'load_candles_data' -r 'run1' --conf '{"exec_mod":"test", "test_data_url": "https://raw.githubusercontent.com/ZipBoerga/gc_candle_tracker/main/testing/candles_initial.csv"}'

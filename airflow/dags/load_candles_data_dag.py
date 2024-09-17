@@ -5,9 +5,11 @@ from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.operators.python import BranchPythonOperator
 from airflow.utils.helpers import chain
+from airflow.utils.trigger_rule import TriggerRule
 
 import utils.scrapping as scrap
 import utils.queries as queries
+from utils.fetch_test_data import fetch_test_data
 
 
 @dag(
@@ -20,10 +22,13 @@ import utils.queries as queries
 def load_candles_data():
     def brancher(**kwargs):
         exec_mod = kwargs['dag_run'].conf.get('exec_mod', 'full')
-        if exec_mod == 'full':
-            return 'get_urls'
-        else:
+        if exec_mod == 'test':
+            test_data_url = kwargs['dag_run'].conf.get('test_data_url')
+            ti = kwargs['ti']
+            ti.xcom_push(key='test_data_url', value=test_data_url)
             return 'get_test_data'
+        else:
+            return 'get_urls'
 
     @task(
         retries=3,
@@ -46,12 +51,13 @@ def load_candles_data():
         return candles
 
     @task()
-    def get_test_data():
-        old_prices_url = \
-            'https://raw.githubusercontent.com/ZipBoerga/gc_candle_tracker/main/testing/candles_initial.csv'
-        new_prices_url = ''
+    def get_test_data(**kwargs):
+        ti = kwargs['ti']
+        data_url = ti.xcom_pull(key='test_data_url', task_ids='branch_task')
+        test_data: list[dict] = fetch_test_data(data_url)
+        return test_data
 
-    @task()
+    @task(task_id="task_final", trigger_rule=TriggerRule.ALL_DONE)
     def write_to_db(candles: list[dict]) -> None:
         pg_hook = PostgresHook(
             postgres_conn_id='tracker_db'
@@ -93,15 +99,24 @@ def load_candles_data():
         python_callable=brancher,
         provide_context=True
     )
+    get_test_data_task = get_test_data()
     get_urls_task = get_urls()
     get_candles_data_task = get_candles_data(get_urls_task)
-    write_to_db_task = write_to_db(get_candles_data_task)
+    write_to_db_task = write_to_db(
+        get_test_data_task if brancher_task.output == 'get_test_data_task' else get_candles_data_task
+    )
     trigger_processing = TriggerDagRunOperator(
         task_id='trigger_data_processing',
         trigger_dag_id='process_data_changes'
     )
 
     chain(get_urls_task, get_candles_data_task, write_to_db_task, trigger_processing)
+
+    brancher_task >> [get_test_data_task, get_urls_task]
+    get_urls_task >> get_candles_data_task
+    get_test_data_task >> write_to_db_task
+    get_candles_data_task >> write_to_db_task
+    write_to_db_task >> trigger_processing
 
 
 load_candles_data_dag = load_candles_data()

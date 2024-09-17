@@ -253,15 +253,15 @@ services:
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
-      POSTGRES_DB: candles
+      POSTGRES_DB: tracker_db
     volumes:
-      - ./postgres_init:/docker-entrypoint-initdb.d
+      - ./postgres:/docker-entrypoint-initdb.d
       - postgres-analytical-volume:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     command: [ 'postgres', '-c', 'wal_level=logical' ]
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "admin" ]
+      test: [ "CMD", "pg_isready", "-U", "tracker_db" ]
       interval: 10s
       retries: 5
       start_period: 5s

@@ -1,9 +1,9 @@
 {
-  "postgres_db": {
-    "conn_id": "postgres_db",
+  "tracker_db": {
+    "conn_id": "tracker_db",
     "conn_type": "postgres",
     "host": "postgres",
-    "schema": "candles",
+    "schema": "tracker_db",
     "login": "admin",
     "password": "admin",
     "port": 5432,

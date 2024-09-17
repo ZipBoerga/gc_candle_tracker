@@ -34,8 +34,8 @@ config = {
 )
 def process_data_changes():
     @task()
-    def read_from_kafka():
-        changed_prices_candles = []
+    def read_changes():
+        changes = []
         consumer = DeserializingConsumer(config)
         consumer.subscribe(['candles.public.current_prices'])
         while True:
@@ -47,16 +47,22 @@ def process_data_changes():
                 print(f'Error while consuming the message: {msg.error()}')
                 continue
             else:
-                value = msg.value()
-                print(f'The value {value}')
+                changes.append(msg.value())
                 consumer.commit()
+        return changes
 
     @task()
-    def test_output2():
-        print('Hello2')
+    def process_changes(changes: list[dict]):
+        new_candles = []
+        updated_prices = []
 
-    read_from_kafka_task = read_from_kafka()
-    test_output2_task = test_output2()
+        for change in changes:
+            before = change.get('payload').get('before')
+            after = change.get('payload').get('after')
+
+
+    read_from_kafka_task = read_changes()
+    test_output2_task = process_changes()
 
     chain(read_from_kafka_task, test_output2_task)
 

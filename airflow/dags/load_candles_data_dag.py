@@ -45,7 +45,13 @@ def load_candles_data():
             candles.append(scrap.get_candle_details(url))
         return candles
 
-    @task
+    @task()
+    def get_test_data():
+        old_prices_url = \
+            'https://raw.githubusercontent.com/ZipBoerga/gc_candle_tracker/main/testing/candles_initial.csv'
+        new_prices_url = ''
+
+    @task()
     def write_to_db(candles: list[dict]) -> None:
         pg_hook = PostgresHook(
             postgres_conn_id='tracker_db'

@@ -3,3 +3,4 @@ beautifulsoup4
 requests
 apache-airflow[postgres]
 airflow-provider-kafka
+confluent-kafka

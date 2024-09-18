@@ -18,8 +18,7 @@ from utils.fetch_test_data import fetch_test_data
 def load_test_data():
     @task()
     def get_test_data(**kwargs):
-        ti = kwargs['ti']
-        data_url = ti.xcom_pull(key='test_data_url', task_ids='branch_task')
+        data_url = kwargs['dag_run'].conf.get('test_data_url')
         test_data: list[dict] = fetch_test_data(data_url)
         return test_data
 

@@ -1,5 +1,5 @@
 from airflow.providers.postgres.hooks.postgres import PostgresHook
-import queries as queries
+import utils.queries as queries
 
 
 def write_price_updates_to_db(update: list[dict]):

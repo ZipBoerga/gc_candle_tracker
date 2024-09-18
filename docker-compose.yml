@@ -236,7 +236,7 @@ services:
     volumes:
       - debezium-volume:/kafka/connect
 
-  debezium-init-connect:
+  debezium-init:
     build:
       context: ./debezium/
       dockerfile: Dockerfile

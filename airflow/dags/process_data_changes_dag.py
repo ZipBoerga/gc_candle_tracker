@@ -39,7 +39,7 @@ def process_data_changes():
     def read_changes():
         changes = []
         consumer = DeserializingConsumer(config)
-        consumer.subscribe(['candles.public.current_prices'])
+        consumer.subscribe(['tracker_db.candles.current_prices'])
         while True:
             msg = consumer.poll(6)
             if msg is None:
@@ -60,7 +60,7 @@ def process_data_changes():
         raised_prices: list[dict] = []
 
         pg_hook = PostgresHook(
-            postgres_conn_id='candles_db'
+            postgres_conn_id='tracker_db'
         )
         conn = pg_hook.get_conn()
         cursor = conn.cursor()

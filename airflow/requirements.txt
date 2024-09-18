@@ -4,3 +4,4 @@ requests
 apache-airflow[postgres]
 airflow-provider-kafka
 confluent-kafka
+pandas

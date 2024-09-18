@@ -23,3 +23,5 @@ psql -U admin -d tracker_db -c "\copy (SELECT id, candle_id, url, name, picture_
 #### linkies for test data
 https://raw.githubusercontent.com/ZipBoerga/gc_candle_tracker/main/testing/candles_initial.csv
 https://raw.githubusercontent.com/ZipBoerga/gc_candle_tracker/testing_updates_sorting/testing/candles_modified.csv
+
+{"test_data_url": "https://raw.githubusercontent.com/ZipBoerga/gc_candle_tracker/main/testing/candles_initial.csv"}

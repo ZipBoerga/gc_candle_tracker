@@ -7,14 +7,14 @@
     "database.port": "5432",
     "database.user": "admin",
     "database.password": "admin",
-    "database.dbname": "candles",
-    "database.server.name": "candles",
-    "table.include.list": "public.current_prices",
+    "database.dbname": "tracker_db",
+    "database.server.name": "tracker_db",
+    "table.include.list": "candles.current_prices",
     "plugin.name": "pgoutput",
     "transforms": "route",
     "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",
     "transforms.route.regex": "(.+)",
     "transforms.route.replacement": "$1",
-    "topic.prefix": "candles"
+    "topic.prefix": "tracker_db"
   }
 }

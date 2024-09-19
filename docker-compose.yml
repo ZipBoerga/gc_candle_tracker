@@ -293,6 +293,15 @@ services:
       - ./spark:/opt/bitnami/spark/spark-apps
       - spark_kafka_checkpoints:/opt/bitnami/spark/checkpoints
 
+  # telegram bot
+  telegram-bot:
+    build:
+      context: ./tg-bot/bot/
+      dockerfile: Dockerfile
+    container_name: telegram-bot
+    profiles:
+      - telegram-bot
+
 
 volumes:
   postgres-airflow-volume:

@@ -4,3 +4,5 @@ airflow/logs/
 airflow/plugins/
 **/__pycache__/
 config/connections.json
+.env
+tg-bot/bot/app/secrets.py

@@ -5,7 +5,6 @@ import random
 from airflow.decorators import dag, task
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils.helpers import chain
-
 from confluent_kafka import DeserializingConsumer
 import utils.queries as queries
 
@@ -18,7 +17,8 @@ def deserializer(data, context):
 
 config = {
     'bootstrap.servers': 'broker:29092',
-    'group.id': str(random.random()),
+    # 'group.id': str(random.random()),
+    'group.id': 'stable-test-group',
     'auto.offset.reset': 'earliest',
     'enable.auto.commit': False,
     'session.timeout.ms': 6000,
@@ -29,7 +29,7 @@ config = {
 
 @dag(
     dag_id='process_data_changes',
-    schedule='@once',
+    schedule_interval=None,
     start_date=datetime(2023, 7, 19),
     is_paused_upon_creation=True,
     catchup=False
@@ -69,12 +69,17 @@ def process_data_changes():
             before = change.get('payload').get('before')
             after = change.get('payload').get('after')
 
-            cursor.execute(queries.history_select_query, (after.get('candle_id')))
+            cursor.execute(queries.history_select_query, (after.get('candle_id'),))
+            candle_data = cursor.fetchone()
             if before is None:
-                candle_data = cursor.fetchone()
-                new_candles.append(candle_data)
+                new_candles.append({
+                    'candle_id': candle_data['candle_id'],
+                    'name': candle_data['name'],
+                    'url': candle_data['url'],
+                    'picture_url': candle_data['picture_url'],
+                    'price': after['price']
+                })
             else:
-                candle_data = cursor.fetch()[:-1]
                 candle_data = {
                     'candle_id': candle_data['candle_id'],
                     'name': candle_data['name'],
@@ -93,7 +98,6 @@ def process_data_changes():
             'lowered_prices': lowered_prices,
             'raised_prices': raised_prices
         }
-
 
     read_from_kafka_task = read_changes()
     process_changes_task = process_changes(read_from_kafka_task)

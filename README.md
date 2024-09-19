@@ -25,3 +25,4 @@ https://raw.githubusercontent.com/ZipBoerga/gc_candle_tracker/main/testing/candl
 https://raw.githubusercontent.com/ZipBoerga/gc_candle_tracker/testing_updates_sorting/testing/candles_modified.csv
 
 {"test_data_url": "https://raw.githubusercontent.com/ZipBoerga/gc_candle_tracker/main/testing/candles_initial.csv"}
+{"test_data_url": "https://raw.githubusercontent.com/ZipBoerga/gc_candle_tracker/testing_updates_sorting/testing/candles_modified.csv"}

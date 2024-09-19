@@ -31,6 +31,5 @@ history_select_query = '''
     SELECT candle_id, name, url, picture_url, price 
     FROM candles.price_history
     WHERE candle_id = %s
-    ORDER BY entry_date DESC
-    LIMIT %s; 
+    ORDER BY entry_date DESC;
 '''

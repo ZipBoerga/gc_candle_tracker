@@ -10,7 +10,8 @@ from utils.fetch_test_data import fetch_test_data
 
 @dag(
     dag_id='load_test_data',
-    schedule='0 13 * * *',
+    # schedule='0 13 * * *',
+    schedule_interval=None,
     start_date=datetime(2023, 7, 19),
     is_paused_upon_creation=True,
     catchup=False

@@ -252,17 +252,20 @@ services:
     container_name: postgres
     image: postgres:13
     environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: admin
-      POSTGRES_DB: tracker_db
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
     volumes:
       - ./postgres:/docker-entrypoint-initdb.d
       - postgres-analytical-volume:/var/lib/postgresql/data
     ports:
       - "5432:5432"
     command: [ 'postgres', '-c', 'wal_level=logical' ]
+    profiles:
+      - debezium
+      - telegram-bot
     healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "tracker_db" ]
+      test: [ "CMD", "pg_isready", "-d", "${DB_NAME}", "-U", "${DB_USER}" ]
       interval: 10s
       retries: 5
       start_period: 5s
@@ -299,12 +302,41 @@ services:
       context: ./tg-bot/bot/
       dockerfile: Dockerfile
     container_name: telegram-bot
+    environment:
+      BACKEND_HOST: ${BACKEND_HOST}
+    depends_on:
+      bot-server:
+        condition: service_healthy
     profiles:
       - telegram-bot
 
+  bot-server:
+    build:
+      context: ./tg-bot/server/
+      dockerfile: Dockerfile
+    container_name: bot-server
+    environment:
+      DB_HOST: ${DB_HOST}
+      DB_NAME: ${DB_HOST}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+    ports:
+      - "5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    profiles:
+      - telegram-bot
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:5000/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
 volumes:
   postgres-airflow-volume:
   postgres-analytical-volume:
   debezium-volume:
   spark_kafka_checkpoints:
+

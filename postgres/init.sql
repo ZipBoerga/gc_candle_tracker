@@ -37,5 +37,8 @@ EXECUTE FUNCTION candles.update_date();
 
 CREATE TABLE IF NOT EXISTS t_users.users (
     user_id INTEGER PRIMARY KEY,
-    chat_id TEXT NOT NULL
+    chat_id INTEGER NOT NULL
 );
+
+
+--SET search_path TO t_users, candles;

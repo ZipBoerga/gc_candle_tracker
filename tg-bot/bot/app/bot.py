@@ -47,10 +47,26 @@ def restricted(func):
 def subscription_check(func):
     @wraps(func)
     async def wrapped(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
+        user_id = update.effective_user.id
         if SUBSCRIPTION_CONTEXT_KEY in context.user_data:
-            logger.info('We have subscription')
+            logger.info(
+                f'The user {user_id} is '
+                f'{"subscribed" if context.user_data.get(SUBSCRIPTION_CONTEXT_KEY) else "not subscribed"}')
         else:
-            logger.info('We have no sub info, need to fetch it!')
+            logger.info('We have no sub info, fetching it')
+            params = {
+                'user_id': user_id
+            }
+            async with session.get(f'http://{BACKEND_HOST}/api/user', params=params) as response:
+                logger.info(response.status)
+                if response.status in (200, 204):
+                    success_json = await response.json()
+                    logger.info(success_json)
+                    context.user_data[SUBSCRIPTION_CONTEXT_KEY] = success_json[SUBSCRIPTION_CONTEXT_KEY]
+                else:
+                    error_message = await response.text()
+                    logger.info(error_message)
+
         return await func(update, context, *args, **kwargs)
     return wrapped
 
@@ -58,6 +74,7 @@ def subscription_check(func):
 @restricted
 @subscription_check
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    logger.info(f'The subscription status for this one: {context.user_data[SUBSCRIPTION_CONTEXT_KEY]}')
     keyboard = [
         [
             InlineKeyboardButton('Request update', callback_data=REQUEST_UPDATE),

@@ -6,7 +6,6 @@ from flask import Flask, request, jsonify
 from psycopg2 import pool, errors
 from psycopg2.errorcodes import UNIQUE_VIOLATION
 
-
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
@@ -33,7 +32,7 @@ def healthcheck():
 
 
 @app.route('/api/user', methods=['POST'])
-def add_user():
+def subscribe_user():
     user_id = request.json.get('user_id')
     chat_id = request.json.get('chat_id')
     print(user_id, chat_id)
@@ -69,6 +68,36 @@ def add_user():
         "status": 201,
         "message": "User chat recorded"
     }), 201
+
+
+@app.route('/api/user', methods=['GET'])
+def get_user():
+    user_id = request.args.get('user_id')
+
+    conn = db_pool.getconn()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute('SELECT * FROM t_users.users WHERE user_id = %s;', (user_id,))
+        result = cursor.fetchone()
+        if result is None:
+            return jsonify({
+                'status': 204,
+                'message': 'User is not subscribed',
+                'is_subscribed': False
+            }), 204
+        else:
+            return jsonify({
+                'status': 200,
+                'message': 'User is subscribed',
+                'is_subscribed': True
+            }), 200
+    except Exception as e:
+        logger.info(e)
+        return str(e), 500
+    finally:
+        cursor.close()
+        db_pool.putconn(conn)
 
 
 if __name__ == '__main__':

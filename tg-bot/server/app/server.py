@@ -3,7 +3,8 @@ from typing import Optional
 import os
 
 from flask import Flask, request, jsonify
-from psycopg2 import pool
+from psycopg2 import pool, errors
+from psycopg2.errorcodes import UNIQUE_VIOLATION
 
 
 logging.basicConfig(level=logging.DEBUG)
@@ -50,6 +51,12 @@ def add_user():
     try:
         cursor.execute('INSERT INTO  t_users.users (user_id, chat_id) VALUES (%s, %s);', (user_id, chat_id))
         conn.commit()
+    except errors.lookup(UNIQUE_VIOLATION):
+        return jsonify({
+            'status': 409,
+            'error': 'Conflict',
+            'message': 'User has already enrolled into subscription.'
+        }), 409
     except Exception as e:
         logger.info(e)
         conn.rollback()

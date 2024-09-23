@@ -1,7 +1,6 @@
+import logging
 import os
 from functools import wraps
-
-import asyncio
 from http import HTTPStatus
 from typing import Optional
 
@@ -12,11 +11,9 @@ from telegram.ext import ContextTypes, Application, CommandHandler
 from secrets import TELEGRAM_BOT_TOKEN, ADMIN_ID
 
 
-SUCCESS_STATUS_CODES = (
-    HTTPStatus.OK,
-    HTTPStatus.CREATED,
-    HTTPStatus.ACCEPTED,
-)
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 
 BACKEND_HOST = os.environ['BACKEND_HOST']
 session: Optional[aiohttp.ClientSession] = None
@@ -55,14 +52,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         'chat_id': chat_id
     }
     async with session.post(f'http://{BACKEND_HOST}/api/user', json=request_body) as response:
-        print(response.status)
-        if response.status in SUCCESS_STATUS_CODES:
-            response_data = await response.json()
-            print(response_data)
+        logger.info(response.status)
+        if response.status == 201:
+            success_json = await response.json()
+            logger.info(success_json)
             await update.message.reply_text(f'Hearing from the user {user_id}! We have written your data to db.')
+        elif response.status == 409:
+            error_json = await response.json()
+            logger.info(error_json)
+            await update.message.reply_text('You have been already enrolled!')
         else:
             error_message = await response.text()
-            print(error_message)
+            logger.info(error_message)
 
 
 @restricted

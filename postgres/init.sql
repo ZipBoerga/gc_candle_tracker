@@ -40,5 +40,6 @@ CREATE TABLE IF NOT EXISTS t_users.users (
     chat_id INTEGER NOT NULL
 );
 
+ALTER ROLE admin SET search_path TO t_users, candles;
 
---SET search_path TO t_users, candles;
+SET search_path TO t_users, candles;

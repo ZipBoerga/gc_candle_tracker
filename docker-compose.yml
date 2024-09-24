@@ -224,6 +224,7 @@ services:
       KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
       VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
       ENABLE_DEBEZIUM_SCRIPTING: 'true'
+    restart: always
     healthcheck:
       test:
         [ 'CMD', 'curl', '--silent', '--fail', '-X', 'GET', 'http://localhost:8083/connectors', ]
@@ -304,6 +305,7 @@ services:
     container_name: telegram-bot
     environment:
       BACKEND_HOST: ${BACKEND_HOST}
+    restart: always
     depends_on:
       bot-server:
         condition: service_healthy
@@ -315,6 +317,7 @@ services:
       context: ./tg-bot/server/
       dockerfile: Dockerfile
     container_name: bot-server
+    restart: always
     environment:
       DB_HOST: ${DB_HOST}
       DB_NAME: ${DB_NAME}

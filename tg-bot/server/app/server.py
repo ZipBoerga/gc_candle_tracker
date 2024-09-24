@@ -81,17 +81,9 @@ def get_user():
         cursor.execute('SELECT * FROM t_users.users WHERE user_id = %s;', (user_id,))
         result = cursor.fetchone()
         if result is None:
-            return jsonify({
-                'status': 204,
-                'message': 'User is not subscribed',
-                'is_subscribed': False
-            }), 204
+            return '', 204
         else:
-            return jsonify({
-                'status': 200,
-                'message': 'User is subscribed',
-                'is_subscribed': True
-            }), 200
+            return jsonify(result), 200
     except Exception as e:
         logger.info(e)
         return str(e), 500

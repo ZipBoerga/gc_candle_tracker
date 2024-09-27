@@ -35,6 +35,11 @@ BEFORE UPDATE ON candles.current_prices
 FOR EACH ROW
 EXECUTE FUNCTION candles.update_date();
 
+CREATE TABLE IF NOT EXISTS candles.changes_reports (
+    datetime TIMESTAMP PRIMARY KEY,
+    report JSON
+);
+
 CREATE TABLE IF NOT EXISTS t_users.users (
     user_id INTEGER PRIMARY KEY,
     chat_id INTEGER NOT NULL

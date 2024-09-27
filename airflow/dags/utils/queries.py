@@ -33,3 +33,7 @@ history_select_query = '''
     WHERE candle_id = %s
     ORDER BY entry_date DESC;
 '''
+
+report_insert_query = '''
+    INSERT INTO candles.changes_reports (datetime, report) VALUES (%s, %s);
+'''

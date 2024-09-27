@@ -1,12 +1,16 @@
 import json
-from datetime import datetime, timedelta
+from datetime import datetime
 import random
+import logging
 
 from airflow.decorators import dag, task
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils.helpers import chain
 from confluent_kafka import DeserializingConsumer
 import utils.queries as queries
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
 
 
 def deserializer(data, context):
@@ -99,10 +103,24 @@ def process_data_changes():
             'raised_prices': raised_prices
         }
 
+    @task()
+    def write_report_to_db(report: dict):
+        pg_hook = PostgresHook(
+            postgres_conn_id='tracker_db'
+        )
+        conn = pg_hook.get_conn()
+        cursor = conn.cursor()
+        try:
+            cursor.execute(queries.report_insert_query, (datetime.utcnow(), json.dumps(report)))
+            conn.commit()
+        except Exception as e:
+            logger.error(e)
+
     read_from_kafka_task = read_changes()
     process_changes_task = process_changes(read_from_kafka_task)
+    write_report_to_db_task = write_report_to_db(process_changes_task)
 
-    chain(read_from_kafka_task, process_changes_task)
+    chain(read_from_kafka_task, process_changes_task, write_report_to_db_task)
 
 
 process_data_changes_dag = process_data_changes()

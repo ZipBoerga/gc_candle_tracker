@@ -11,25 +11,34 @@ def write_price_updates_to_db(update: list[dict]):
 
     try:
         for update in update:
-            id_ = f"{update['candle_id']}_{update['processing_date']}"
+            # Write a new candle to db
+            cursor.execute(queries.candle_select, (update['candle_id'],))
+            if cursor.fetchone() is None:
+                cursor.execute(queries.candle_insert,
+                               (
+                                   update['candle_id'],
+                                   update['url'],
+                                   update['name'],
+                                   update['picture_url'],
+                                   update['ingredients'],
+                               ))
+
+            # write price update
+            update_id = f"{update['candle_id']}_{update['processing_date']}"
             cursor.execute(
-                queries.history_insert_query,
+                queries.history_insert,
                 (
-                    id_,
+                    update_id,
                     update['candle_id'],
-                    update['url'],
-                    update['name'],
-                    update['picture_url'],
-                    update['ingredients'],
                     update['price'],
                 ),
             )
-            cursor.execute(queries.curr_price_select_query, (update['candle_id'],))
+            cursor.execute(queries.curr_price_select, (update['candle_id'],))
             price = cursor.fetchall()
             if len(price) == 0:
-                cursor.execute(queries.curr_price_insert_query, (update['candle_id'], update['price']))
+                cursor.execute(queries.curr_price_insert, (update['candle_id'], update['price']))
             else:
-                cursor.execute(queries.curr_price_update_query, (update['price'], update['candle_id']))
+                cursor.execute(queries.curr_price_update, (update['price'], update['candle_id']))
         conn.commit()
     except Exception as e:
         conn.rollback()

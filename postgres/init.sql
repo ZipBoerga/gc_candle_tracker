@@ -1,17 +1,25 @@
 ALTER SCHEMA public RENAME TO candles;
 CREATE SCHEMA t_users;
 
-CREATE TABLE IF NOT EXISTS candles.price_history (
-    id VARCHAR(50) PRIMARY KEY,
-    candle_id VARCHAR(100) NOT NULL,
+CREATE TABLE IF NOT EXISTS candles.candles (
+    candle_id VARCHAR(100)  PRIMARY KEY,
     url VARCHAR(255) NOT NULL,
     name VARCHAR(255) NOT NULL,
     picture_url VARCHAR(255),
-    ingredients VARCHAR[],
-    price REAL NOT NULL,
-    entry_date DATE DEFAULT CURRENT_DATE
+    ingredients VARCHAR[]
 );
 
+
+CREATE TABLE IF NOT EXISTS candles.price_history (
+    id VARCHAR(50) PRIMARY KEY,
+    candle_id VARCHAR(100) NOT NULL,
+    price REAL NOT NULL,
+    entry_date DATE DEFAULT CURRENT_DATE,
+    CONSTRAINT fk_candles
+        FOREIGN KEY (candle_id)
+        REFERENCES candles.candles(candle_id)
+        ON DELETE CASCADE
+);
 
 
 CREATE TABLE IF NOT EXISTS candles.current_prices (
@@ -42,7 +50,8 @@ CREATE TABLE IF NOT EXISTS candles.changes_reports (
 
 CREATE TABLE IF NOT EXISTS t_users.users (
     user_id INTEGER PRIMARY KEY,
-    chat_id INTEGER NOT NULL
+    chat_id INTEGER NOT NULL,
+    subscribed BOOLEAN NOT NULL DEFAULT FALSE
 );
 
 ALTER ROLE admin SET search_path TO t_users, candles;

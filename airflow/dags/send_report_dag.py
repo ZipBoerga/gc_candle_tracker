@@ -29,7 +29,7 @@ def send_report():
         cursor = conn.cursor()
 
         try:
-            cursor.execute(queries.last_report_select_query)
+            cursor.execute(queries.last_report_select)
             result = cursor.fetchone()
             return result[1]
         except Exception as e:
@@ -44,7 +44,7 @@ def send_report():
         cursor = conn.cursor()
 
         try:
-            cursor.execute(queries.users_select_query)
+            cursor.execute(queries.users_select)
             result = cursor.fetchall()
         except Exception as e:
             logger.error(e)

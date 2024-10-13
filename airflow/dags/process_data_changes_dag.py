@@ -75,14 +75,16 @@ def process_data_changes():
             before = change.get('payload').get('before')
             after = change.get('payload').get('after')
 
-            cursor.execute(queries.history_select_query, (after.get('candle_id'),))
+            cursor.execute(queries.candle_select, (after.get('candle_id'),))
             candle_data = cursor.fetchone()
+
             if before is None:
                 new_candles.append({
                     'candle_id': candle_data[0],
                     'name': candle_data[1],
                     'url': candle_data[2],
                     'picture_url': candle_data[3],
+                    'ingredients': candle_data[4],
                     'price': after['price']
                 })
             else:
@@ -91,6 +93,7 @@ def process_data_changes():
                     'name': candle_data[1],
                     'url': candle_data[2],
                     'picture_url': candle_data[3],
+                    'ingredients': candle_data[4],
                     'old_price': before['price'],
                     'new_price': after['price']
                 }
@@ -113,7 +116,7 @@ def process_data_changes():
         conn = pg_hook.get_conn()
         cursor = conn.cursor()
         try:
-            cursor.execute(queries.report_insert_query, (datetime.utcnow(), json.dumps(report)))
+            cursor.execute(queries.report_insert, (datetime.utcnow(), json.dumps(report)))
             conn.commit()
         except Exception as e:
             logger.error(e)

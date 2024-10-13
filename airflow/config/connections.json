@@ -7,6 +7,19 @@
     "login": "admin",
     "password": "admin",
     "port": 5432,
-    "extra": {"cursor": "dictcursor"}
+    "extra": {
+      "cursor": "dictcursor"
+    }
+  },
+  "bot_api": {
+    "conn_id": "bot_api",
+    "conn_type": "http",
+    "host": "https://api.telegram.org",
+    "login": null,
+    "password": null,
+    "port": null,
+    "extra": {
+      "cursor": null
+    }
   }
 }

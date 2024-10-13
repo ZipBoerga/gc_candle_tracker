@@ -37,3 +37,13 @@ history_select_query = '''
 report_insert_query = '''
     INSERT INTO candles.changes_reports (datetime, report) VALUES (%s, %s);
 '''
+
+last_report_select_query = '''
+    SELECT datetime, report FROM candles.changes_reports 
+    ORDER BY datetime DESC
+    LIMIT 1;
+'''
+
+users_select_query = '''
+    SELECT user_id, chat_id FROM t_users.users;
+'''

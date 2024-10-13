@@ -19,7 +19,7 @@ def deserializer(data, context):
     return json.loads(data.decode('utf-8'))
 
 
-config = {
+kafka_sub_config = {
     'bootstrap.servers': 'broker:29092',
     # 'group.id': str(random.random()),
     'group.id': 'stable-test-group',
@@ -42,7 +42,7 @@ def process_data_changes():
     @task()
     def read_changes():
         changes = []
-        consumer = DeserializingConsumer(config)
+        consumer = DeserializingConsumer(kafka_sub_config)
         consumer.subscribe(['tracker_db.candles.current_prices'])
         while True:
             msg = consumer.poll(6)
@@ -54,6 +54,8 @@ def process_data_changes():
                 continue
             else:
                 changes.append(msg.value())
+                print(f'The message\'s type {type(msg.value().get("payload").get("before"))}')
+                print(f'The message itself {msg.value().get("payload").get("before")}')
                 consumer.commit()
         return changes
 
@@ -77,18 +79,18 @@ def process_data_changes():
             candle_data = cursor.fetchone()
             if before is None:
                 new_candles.append({
-                    'candle_id': candle_data['candle_id'],
-                    'name': candle_data['name'],
-                    'url': candle_data['url'],
-                    'picture_url': candle_data['picture_url'],
+                    'candle_id': candle_data[0],
+                    'name': candle_data[1],
+                    'url': candle_data[2],
+                    'picture_url': candle_data[3],
                     'price': after['price']
                 })
             else:
                 candle_data = {
-                    'candle_id': candle_data['candle_id'],
-                    'name': candle_data['name'],
-                    'url': candle_data['url'],
-                    'picture_url': candle_data['picture_url'],
+                    'candle_id': candle_data[0],
+                    'name': candle_data[1],
+                    'url': candle_data[2],
+                    'picture_url': candle_data[3],
                     'old_price': before['price'],
                     'new_price': after['price']
                 }

@@ -266,6 +266,7 @@ services:
     profiles:
       - debezium
       - telegram-bot
+      - airflow
     healthcheck:
       test: [ "CMD", "pg_isready", "-d", "${DB_NAME}", "-U", "${DB_USER}" ]
       interval: 10s

@@ -18,6 +18,7 @@ session: Optional[aiohttp.ClientSession] = None
 
 GET_UPDATES, SUBSCRIBE, UNSUBSCRIBE = range(3)
 
+
 SUBSCRIPTION_CONTEXT_KEY = 'is_subscribed'
 
 
@@ -53,16 +54,17 @@ def subscription_check(func):
                 f'The user {user_id} is '
                 f'{"subscribed" if context.user_data.get(SUBSCRIPTION_CONTEXT_KEY) else "not subscribed"}')
         else:
-            logger.info('We have no sub info, fetching it')
+            logger.info('No subscription info, fetching it')
             params = {
                 'user_id': user_id
             }
             async with session.get(f'http://{BACKEND_HOST}/api/user', params=params) as response:
                 logger.info(response.status)
 
-                # TODO change logic of DB subs
                 if response.status == 200:
-                    context.user_data[SUBSCRIPTION_CONTEXT_KEY] = True
+                    response = await response.json()
+                    logger.debug(response)
+                    context.user_data[SUBSCRIPTION_CONTEXT_KEY] = response['subscribed']
                 elif response.status == 204:
                     context.user_data[SUBSCRIPTION_CONTEXT_KEY] = False
                 else:
@@ -103,7 +105,22 @@ def _get_keyboard(context: ContextTypes.DEFAULT_TYPE) -> InlineKeyboardMarkup:
 @restricted
 @subscription_check
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    subscription_action_button = _get_subscription_action_button(context)
+    request_body = {
+        'user_id': update.effective_user.id,
+        'chat_id': update.effective_chat.id
+    }
+    async with session.post(f'http://{BACKEND_HOST}/api/user', json=request_body) as response:
+        logger.debug(response.status)
+        if response.status == 201:
+            success_json = await response.json()
+            logger.debug(success_json)
+        elif response.status == 409:
+            error_json = await response.json()
+            logger.error(f'User is already subscribed. API response: {error_json}')
+        else:
+            error_message = await response.text()
+            logger.error(error_message)
+
     reply_markup = _get_keyboard(context)
     await update.message.reply_text('Welcome to GC Price Updates bot! Please select what you want to do.',
                                     reply_markup=reply_markup)
@@ -129,32 +146,72 @@ async def get_price_changes(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 @restricted
-@subscription_check
 async def subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
     await query.answer()
 
     request_body = {
         'user_id': update.effective_user.id,
-        'chat_id': update.effective_chat.id
+        'subscription': True,
     }
-    async with session.post(f'http://{BACKEND_HOST}/api/user', json=request_body) as response:
-        logger.info(response.status)
-        if response.status == 201:
+    async with session.patch(f'http://{BACKEND_HOST}/api/user', json=request_body) as response:
+        logger.debug(response.status)
+        if response.status == 200:
             success_json = await response.json()
-            logger.info(success_json)
+            logger.debug(success_json)
             context.user_data[SUBSCRIPTION_CONTEXT_KEY] = True
             # TODO replace it with the reply markup only message, otherwise it's doubled
             await context.bot.send_message(text='You are subscribed now! Daily you will be receiving price updates!',
                                            chat_id=update.effective_chat.id)
         elif response.status == 409:
             error_json = await response.json()
-            logger.info(error_json)
-            await context.bot.send_message(text='You are already subscribed!', chat_id=update.effective_chat.id)
+            logger.error(error_json)
+            context.user_data[SUBSCRIPTION_CONTEXT_KEY] = True
+            await context.bot.send_message(text='You are already subscribed! What an oddity...',
+                                           chat_id=update.effective_chat.id)
 
         else:
             error_message = await response.text()
-            logger.info(error_message)
+            logger.error(error_message)
+
+    await context.bot.delete_message(
+        chat_id=update.effective_chat.id,
+        message_id=query.message.message_id
+    )
+    # await query.edit_message_text(
+    #     text='Want something now? (sub call)', reply_markup=reply_markup
+    # )
+    reply_markup = _get_keyboard(context)
+    await context.bot.send_message(text='Want something now? (sub call)', reply_markup=reply_markup,
+                                   chat_id=update.effective_chat.id)
+
+
+@restricted
+async def unsubscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query = update.callback_query
+    await query.answer()
+
+    request_body = {
+        'user_id': update.effective_user.id,
+        'subscription': False,
+    }
+    async with session.patch(f'http://{BACKEND_HOST}/api/user', json=request_body) as response:
+        logger.debug(response.status)
+        if response.status == 200:
+            success_json = await response.json()
+            logger.debug(success_json)
+            context.user_data[SUBSCRIPTION_CONTEXT_KEY] = False
+            # TODO replace it with the reply markup only message, otherwise it's doubled
+            await context.bot.send_message(text='You have unsubscribed!', chat_id=update.effective_chat.id)
+        elif response.status == 409:
+            error_json = await response.json()
+            logger.error(error_json)
+            context.user_data[SUBSCRIPTION_CONTEXT_KEY] = False
+            await context.bot.send_message(text='You are already unsubscribed! What an oddity...',
+                                           chat_id=update.effective_chat.id)
+        else:
+            error_message = await response.text()
+            logger.error(error_message)
 
     await context.bot.delete_message(
         chat_id=update.effective_chat.id,
@@ -180,6 +237,7 @@ def main() -> None:
     application.add_handler(CommandHandler('start', start))
     application.add_handler(CallbackQueryHandler(get_price_changes, pattern=f'^{str(GET_UPDATES)}$'))
     application.add_handler(CallbackQueryHandler(subscribe, pattern=f'^{str(SUBSCRIBE)}$'))
+    application.add_handler(CallbackQueryHandler(unsubscribe, pattern=f'^{str(UNSUBSCRIBE)}$'))
 
     application.run_polling(allowed_updates=Update.ALL_TYPES)
 

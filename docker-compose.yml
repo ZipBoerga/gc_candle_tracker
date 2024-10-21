@@ -120,7 +120,6 @@ services:
       _AIRFLOW_WWW_USER_PASSWORD: ${_AIRFLOW_WWW_USER_PASSWORD:-airflow}
     user: "0:0"
 
-
   # debezium, cdc
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
@@ -138,6 +137,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: always
 
   broker:
     image: confluentinc/cp-server:7.4.0
@@ -177,6 +177,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    restart: always
 
   kafka_control_center:
     image: confluentinc/cp-enterprise-control-center:7.4.0
@@ -203,6 +204,7 @@ services:
       interval: 30s
       timeout: 10s
       retries: 5
+    restart: always
 
   debezium:
     image: debezium/connect:latest
@@ -265,7 +267,7 @@ services:
     command: [ 'postgres', '-c', 'wal_level=logical' ]
     profiles:
       - debezium
-      - telegram-bot
+      - tg_bot
       - airflow
     healthcheck:
       test: [ "CMD", "pg_isready", "-d", "${DB_NAME}", "-U", "${DB_USER}" ]
@@ -312,7 +314,7 @@ services:
       bot-server:
         condition: service_healthy
     profiles:
-      - telegram-bot
+      - tg_bot
 
   bot-server:
     build:
@@ -331,7 +333,7 @@ services:
       postgres:
         condition: service_healthy
     profiles:
-      - telegram-bot
+      - tg_bot
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:5000/health" ]
       interval: 30s

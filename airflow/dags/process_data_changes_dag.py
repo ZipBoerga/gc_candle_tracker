@@ -4,6 +4,7 @@ import random
 import logging
 
 from airflow.decorators import dag, task
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.providers.postgres.hooks.postgres import PostgresHook
 from airflow.utils.helpers import chain
 from confluent_kafka import DeserializingConsumer
@@ -121,11 +122,16 @@ def process_data_changes():
         except Exception as e:
             logger.error(e)
 
+    trigger_send_report = TriggerDagRunOperator(
+        task_id='trigger_send_report',
+        trigger_dag_id='send_report'
+    )
+
     read_from_kafka_task = read_changes()
     process_changes_task = process_changes(read_from_kafka_task)
     write_report_to_db_task = write_report_to_db(process_changes_task)
 
-    chain(read_from_kafka_task, process_changes_task, write_report_to_db_task)
+    chain(read_from_kafka_task, process_changes_task, write_report_to_db_task, trigger_send_report)
 
 
 process_data_changes_dag = process_data_changes()

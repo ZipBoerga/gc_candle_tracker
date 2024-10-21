@@ -47,6 +47,6 @@ last_report_select = '''
     LIMIT 1;
 '''
 
-users_select = '''
-    SELECT user_id, chat_id FROM t_users.users;
+users_with_sub_select = '''
+    SELECT user_id, chat_id FROM t_users.users WHERE subscribed = True;
 '''

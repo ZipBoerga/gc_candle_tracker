@@ -39,7 +39,7 @@ def _get_category_message(updates: dict, update_type: UpdateType = UpdateType.NE
         if name_match:
             name = name_match.group(1).strip()
         else:
-            continue  # Skip this update if name doesn't match the regex
+            continue
 
         match update_type:
             case UpdateType.NEW:

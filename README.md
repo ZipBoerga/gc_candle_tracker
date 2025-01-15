@@ -1,6 +1,9 @@
 ## TODO
-Normalize DB to more star-like table, prices history should not contain dimension data
-
+* Refine bot text answers
+* Handle situations when there are too many updates
+* Utilize Spark
+* Refactor queries to the separate modules
+* Reimagine admin access only wrapper
 
 ## RUN Commands
 Debezium and DB

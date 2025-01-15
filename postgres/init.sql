@@ -53,8 +53,8 @@ CREATE TABLE IF NOT EXISTS candles.changes_reports (
 );
 
 CREATE TABLE IF NOT EXISTS t_users.users (
-    user_id INTEGER PRIMARY KEY,
-    chat_id INTEGER NOT NULL,
+    user_id VARCHAR(40) PRIMARY KEY,
+    chat_id VARCHAR(40) NOT NULL,
     subscribed BOOLEAN NOT NULL DEFAULT FALSE
 );
 

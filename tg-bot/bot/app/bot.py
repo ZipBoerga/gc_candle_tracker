@@ -8,7 +8,7 @@ from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, Application, CommandHandler, CallbackQueryHandler, ConversationHandler
 
 import app_text as text_consts
-from secrets import TELEGRAM_BOT_TOKEN, ADMIN_ID
+from secrets import TELEGRAM_BOT_TOKEN, ADMIN_IDS
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
@@ -17,7 +17,6 @@ BACKEND_HOST = os.environ['BACKEND_HOST']
 session: Optional[aiohttp.ClientSession] = None
 
 GET_UPDATES, SUBSCRIBE, UNSUBSCRIBE = range(3)
-
 
 SUBSCRIPTION_CONTEXT_KEY = 'is_subscribed'
 
@@ -37,7 +36,7 @@ def restricted(func):
     @wraps(func)
     async def wrapped(update: Update, context: ContextTypes.DEFAULT_TYPE, *args, **kwargs):
         user_id = update.effective_user.id
-        if user_id != ADMIN_ID:
+        if user_id not in ADMIN_IDS:
             logger.info("Unauthorized access denied for {}.".format(user_id))
             return
         return await func(update, context, *args, **kwargs)
@@ -106,8 +105,8 @@ def _get_keyboard(context: ContextTypes.DEFAULT_TYPE) -> InlineKeyboardMarkup:
 @subscription_check
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     request_body = {
-        'user_id': update.effective_user.id,
-        'chat_id': update.effective_chat.id
+        'user_id': str(update.effective_user.id),
+        'chat_id': str(update.effective_chat.id)
     }
     async with session.post(f'http://{BACKEND_HOST}/api/user', json=request_body) as response:
         logger.debug(response.status)
@@ -134,8 +133,8 @@ async def get_price_changes(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     reply_markup = _get_keyboard(context)
     await context.bot.delete_message(
-        chat_id=update.effective_chat.id,
-        message_id=query.message.message_id
+        chat_id=str(update.effective_chat.id),
+        message_id=str(query.message.message_id)
     )
     await context.bot.send_message(text='Here are some changes', chat_id=update.effective_chat.id)
     # await query.edit_message_text(
@@ -151,7 +150,7 @@ async def subscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
 
     request_body = {
-        'user_id': update.effective_user.id,
+        'user_id': str(update.effective_user.id),
         'subscription': True,
     }
     async with session.patch(f'http://{BACKEND_HOST}/api/user', json=request_body) as response:
@@ -192,7 +191,7 @@ async def unsubscribe(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await query.answer()
 
     request_body = {
-        'user_id': update.effective_user.id,
+        'user_id': str(update.effective_user.id),
         'subscription': False,
     }
     async with session.patch(f'http://{BACKEND_HOST}/api/user', json=request_body) as response:

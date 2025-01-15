@@ -23,7 +23,7 @@ db_pool = pool.SimpleConnectionPool(
 
 
 def is_valid(value: Optional[int]) -> bool:
-    return value is not None and isinstance(value, int)
+    return value is not None and isinstance(value, str)
 
 
 @app.route('/health', methods=['GET'])

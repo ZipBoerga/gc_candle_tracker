@@ -136,10 +136,23 @@ async def get_price_changes(update: Update, context: ContextTypes.DEFAULT_TYPE):
         chat_id=str(update.effective_chat.id),
         message_id=str(query.message.message_id)
     )
-    await context.bot.send_message(text='Here are some changes', chat_id=update.effective_chat.id)
-    # await query.edit_message_text(
-    #     text='Want something now? (updates call)', reply_markup=reply_markup
-    # )
+    async with session.get(f'http://{BACKEND_HOST}/api/report') as response:
+        logger.debug(response.status)
+        if response.status == 200:
+            success_json = await response.json()
+            logger.debug(success_json)
+            report_messages = success_json['report']
+            for message in report_messages:
+                await context.bot.send_message(text=message, chat_id=update.effective_chat.id, parse_mode='HTML')
+        elif response.status == 204:
+            await context.bot.send_message(text='Looks like there are no previous statistics yet, come tomorrow!',
+                                           chat_id=update.effective_chat.id)
+            logger.debug('Empty response came from server.')
+        else:
+            error_message = await response.text()
+            logger.error(error_message)
+            await context.bot.send_message(text='Unexpected server error has happened, please try later.',
+                                           chat_id=update.effective_chat.id)
     await context.bot.send_message(text='Want something now? (updates call)', reply_markup=reply_markup,
                                    chat_id=update.effective_chat.id)
 

@@ -1,6 +1,13 @@
 ALTER SCHEMA public RENAME TO candles;
 CREATE SCHEMA t_users;
 
+
+CREATE TABLE IF NOT EXISTS configs (
+    is_initial_load BOOLEAN NOT NULL DEFAULT TRUE, -- changes in the end of data fetching, if true, the further tasks or dag not triggered
+    changes_last_run BOOLEAN NOT NULL DEFAULT FALSE, -- changes while forming report, if false, no report broadcasting
+);
+
+
 CREATE TABLE IF NOT EXISTS candles.candles (
     candle_id VARCHAR(100)  PRIMARY KEY,
     url VARCHAR(255) NOT NULL,

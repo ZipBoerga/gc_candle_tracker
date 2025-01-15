@@ -32,7 +32,7 @@ def _get_category_message(updates: dict, update_type: UpdateType = UpdateType.NE
         case UpdateType.RAISE:
             message = 'Here are <b>raised</b> prices:\n'
         case _:
-            raise Exception('Incorrect update type label was passed.')
+            raise Exception('Incorrect UpdateType was passed for forming a report message.')
 
     for update in updates:
         name_match = re.match(regex, update['name'])
@@ -48,6 +48,8 @@ def _get_category_message(updates: dict, update_type: UpdateType = UpdateType.NE
                 old_price = update["old_price"]
                 new_price = update["new_price"]
                 to_append = f'<a href="{update["url"]}">{name}</a>: {old_price} -> {new_price}\n'
+            case _:
+                raise Exception('Incorrect UpdateType was passed for forming a report message.')
 
         message += to_append
 

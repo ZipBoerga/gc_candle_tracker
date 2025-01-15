@@ -4,6 +4,7 @@
 * Utilize Spark
 * Refactor queries to the separate modules
 * Reimagine admin access only wrapper
+* Handle initial loads
 
 ## RUN Commands
 Debezium and DB

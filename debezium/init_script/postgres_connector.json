@@ -10,7 +10,7 @@
     "database.dbname": "tracker_db",
     "database.server.name": "tracker_db",
     "table.include.list": "candles.current_prices",
-    "column.exclude.list": "date_updated",
+    "column.exclude.list": "price_update_date",
     "plugin.name": "pgoutput",
     "transforms": "route",
     "transforms.route.type": "org.apache.kafka.connect.transforms.RegexRouter",

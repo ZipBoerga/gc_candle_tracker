@@ -25,23 +25,27 @@ CREATE TABLE IF NOT EXISTS candles.price_history (
 CREATE TABLE IF NOT EXISTS candles.current_prices (
     candle_id VARCHAR(100) PRIMARY KEY,
     price REAL NOT NULL,
-    date_updated DATE DEFAULT CURRENT_DATE
+    price_update_date DATE DEFAULT CURRENT_DATE
 );
 
 ALTER TABLE candles.current_prices REPLICA IDENTITY FULL;
 
-CREATE OR REPLACE FUNCTION candles.update_date()
+CREATE OR REPLACE FUNCTION candles.update_price()
 RETURNS TRIGGER AS $$
 BEGIN
-    NEW.date_updated = CURRENT_DATE;
-    RETURN NEW;
+    IF NEW.price != OLD.price THEN
+        NEW.price_update_date = CURRENT_DATE;
+        RETURN NEW;
+    ELSE
+        RETURN NULL;
+    END IF;
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER update_date_trigger
+CREATE TRIGGER update_price_trigger
 BEFORE UPDATE ON candles.current_prices
 FOR EACH ROW
-EXECUTE FUNCTION candles.update_date();
+EXECUTE FUNCTION candles.update_price();
 
 CREATE TABLE IF NOT EXISTS candles.changes_reports (
     datetime TIMESTAMP PRIMARY KEY,

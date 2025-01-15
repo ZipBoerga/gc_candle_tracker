@@ -3,12 +3,19 @@ Normalize DB to more star-like table, prices history should not contain dimensio
 
 
 ## RUN Commands
+Debezium and DB
 ```commandline
  docker-compose --env-file .env --profile debezium up -d 
 ```
 
+Airflow
 ```commandline
  docker-compose --env-file .env --profile airflow up -d 
+```
+
+Telegram bot
+```commandline
+ docker-compose --env-file .env --profile tg_bot up -d 
 ```
 
 ```commandline

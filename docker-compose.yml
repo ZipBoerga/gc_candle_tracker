@@ -207,7 +207,7 @@ services:
     restart: always
 
   debezium:
-    image: debezium/connect:latest
+    image: debezium/connect:2.2
     container_name: debezium
     hostname: debezium
     depends_on:
